@@ -72,16 +72,18 @@ services:
 
         image: apacheignite/ignite
         container_name: ignite
-        ports: ["8080:8080", "10800:10800", "11211:11211"]
+        ports: ["8084:8084", "10800:10800", "11211:11211"]
 
     db:
         image: postgres
+        container_name: postgres
         environment:
-            ["POSTGRES_DB=postgres",
+            ["POSTGRES_DB=distribuidosdb",
             "POSTGRES_USER=postgres",
-            "POSTGRES_PASSWORD=postgres"]
+            "POSTGRES_PASSWORD=asd123"]
     web:
         build: .
+        container_name: django
         command: python manage.py runserver 0.0.0.0:8000
         volumes: [".:/code"]
         ports: ["8000:8000"]
