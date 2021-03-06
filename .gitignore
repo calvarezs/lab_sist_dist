@@ -1,5 +1,6 @@
 
 labdis/__pycache__/
+backend_lab/__pycache__/
 
 .DS_Store
 node_modules

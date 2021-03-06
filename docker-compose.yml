@@ -89,5 +89,9 @@ services:
         ports: ["8000:8000"]
         depends_on: ["db"]
 
-
- 
+    vue:
+        container_name: front_lab
+        build: ./frontend_lab
+        command: bash -c "npm install && npm run serve" 
+        ports: ["8080:8080"] 
+        volumes: ["./frontend_lab:/usr/src/app/frontend_lab", "/usr/src/app/frontend_lab/node_modules"]
