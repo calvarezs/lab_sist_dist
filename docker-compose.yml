@@ -80,14 +80,16 @@ services:
         environment:
             ["POSTGRES_DB=distribuidosdb",
             "POSTGRES_USER=postgres",
-            "POSTGRES_PASSWORD=asd123"]
+            "POSTGRES_PASSWORD=asd123"] 
+
     web:
         build: ./docker/web 
         container_name: django
-        command: python manage.py runserver 0.0.0.0:8000
+        command: bash -c "while !</dev/tcp/db/5432; do sleep 10; done; python manage.py runserver 0.0.0.0:8000 && python manage.py migrate"
         volumes: [".:/code"]
         ports: ["8000:8000"]
-        depends_on: ["db"]
+        restart: on-failure
+        depends_on: ["db"]  
 
     vue:
         container_name: front_lab
