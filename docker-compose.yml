@@ -21,58 +21,67 @@ services:
         environment:
             ["KAFKA_BROKER_ID=1",
             "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
-            "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092",
+            "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092",
             "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1",
             "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0",
-            "KAFKA_LOG4J_ROOT_LOGLEVEL=ERROR"]
+            "KAFKA_LOG4J_ROOT_LOGLEVEL=ERROR",
+            #
+            "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP= PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
+            "CONFLUENT_SUPPORT_CUSTOMER_ID= anonymous"]
         container_name: broker
-
-    schema_registry:
-
-        image: confluentinc/cp-schema-registry
-        hostname: schema_registry
-        depends_on: [zookeeper, broker]
-        ports: ["8081:8081"]
-        environment: 
-            ["SCHEMA_REGISTRY_HOST_NAME=schema_registry",
-            "SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181"]
-
-        container_name: schema
 
     connect:
 
-        image: confluentinc/cp-kafka-connect
+        image: confluentinc/cp-kafka-connect:5.1.2
         hostname: connect
-        depends_on: [zookeeper, broker, schema_registry]
+        depends_on: [zookeeper, broker]
         ports: ["8083:8083"] 
         environment:
-            ["CONNECT_BOOTSTRAP_SERVERS=broker:9092",
+            ["CONNECT_BOOTSTRAP_SERVERS=localhost:9092",
             "CONNECT_REST_ADVERTISED_HOST_NAME=connect",
-            "CONNECT_REST_PORT=8089",
+            "CONNECT_REST_PORT=8083",
             "CONNECT_GROUP_ID=compose-connect-group",
             "CONNECT_CONFIG_STORAGE_TOPIC=docker-connect-configs",
             "CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR=1",
-            "CONNECT_OFFSET_FLUSH_INTERVAL_MS=10000",
+            "CONNECT_OFFSET_FLUSH_INTERVAL_MS=15000",
             "CONNECT_OFFSET_STORAGE_TOPIC=docker-connect-offsets",
             "CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1",
             "CONNECT_STATUS_STORAGE_TOPIC=docker-connect-status",
             "CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1",
-            "CONNECT_KEY_CONVERTER=io.confluent.connect.avro.AvroConverter",
-            "CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL= http://schema_registry:8081",
-            "CONNECT_VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter",
-            "CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://schema_registry:8081",
-            "CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter",
-            "CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter",
-            "CONNECT_LOG4J_ROOT_LOGLEVEL=ERROR",
-            "CONNECT_LOG4J_LOGGERS=org.reflections=ERROR",
-            "CONNECT_ZOOKEEPER_CONNECT=zookeeper:2181"]
-        container_name: connect
-    
-    ignite:
+#
+            "CONNECT_KEY_CONVERTER= org.apache.kafka.connect.json.JsonConverter",
+            "CONNECT_VALUE_CONVERTER= org.apache.kafka.connect.json.JsonConverter",
+            "CONNECT_INTERNAL_KEY_CONVERTER= 'org.apache.kafka.connect.json.JsonConverter'",
+            "CONNECT_INTERNAL_VALUE_CONVERTER= 'org.apache.kafka.connect.json.JsonConverter'",
+            "CONNECT_LOG4J_ROOT_LOGLEVEL= 'INFO'",
+            "CONNECT_LOG4J_LOGGERS= 'org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR,com.mongodb.kafka=DEBUG'",
+            "CONNECT_PLUGIN_PATH= /usr/share/confluent-hub-components",
+            "CONNECT_ZOOKEEPER_CONNECT= zookeeper:2181",
+            # Assumes image is based on confluentinc/kafka-connect-datagen:latest which is pulling 5.2.2 Connect image
+            "CLASSPATH= /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.2.2.jar",
+            "CONNECT_PRODUCER_INTERCEPTOR_CLASSES= 'io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor'",
+            "CONNECT_CONSUMER_INTERCEPTOR_CLASSES= 'io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor'"]
+        command: bash -c "if [ ! -d /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen ]; then echo \"WARNING Did not find directory for kafka-connect-datagen (recuerda hacer docker-compose up -d --build)\"; fi ; /etc/confluent/docker/run"
+        volumes: [./kafka-connect-mongodb:/usr/share/confluent-hub-components/kafka-connect-mongodb]
 
-        image: apacheignite/ignite
-        container_name: ignite
-        ports: ["8084:8084", "10800:10800", "11211:11211"]
+            # "CONNECT_KEY_CONVERTER=io.confluent.connect.avro.AvroConverter",
+            # "CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL= http://schema_registry:8081",
+            # "CONNECT_VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter",
+            # "CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://schema_registry:8081",
+            # "CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter",
+            # "CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter",
+            # "CONNECT_LOG4J_ROOT_LOGLEVEL=ERROR",
+            # "CONNECT_LOG4J_LOGGERS=org.reflections=ERROR",
+            # "CONNECT_ZOOKEEPER_CONNECT=zookeeper:2181"]
+        container_name: connect
+
+    mongo:
+        image: "mongo:4.0-xenial"
+        container_name: mongo
+        command: --replSet rs0 --smallfiles --oplogSize 128
+        volumes: [rs:/data/db]
+        ports: ["27017:27017"]
+        restart: always
 
     db:
         image: postgres
@@ -89,7 +98,7 @@ services:
         volumes: [".:/code"]
         ports: ["8000:8000"]
         restart: on-failure
-        depends_on: ["db"]  
+        depends_on: ["db", "mongo"]  
 
     vue:
         container_name: front_lab
@@ -97,3 +106,22 @@ services:
         command: bash -c "npm install && npm run serve" 
         ports: ["8080:8080"] 
         volumes: ["./frontend_lab:/usr/src/app/frontend_lab", "/usr/src/app/frontend_lab/node_modules"]
+
+    kafka:
+        build: ./kafka
+        command: bash -c "yarn && yarn run kafka"
+        volumes: [".:/app"]
+        ports: ["3001:3001"]
+        depends_on: ["mongo"]          
+
+    prediction:
+        build: ./prediction
+        command: bash -c "yarn && yarn run prediction"
+        volumes: [".:/app"]
+        ports: ["3002:3002"]
+        depends_on: ["mongo"]
+
+volumes:
+  rs:
+
+
