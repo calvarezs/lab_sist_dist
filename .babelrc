@@ -1,0 +1,32 @@
+{
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ],
+    "plugins": [
+      ["module-resolver", {
+        "root": ["./src"],
+        "alias": {
+          "$root": "./src",
+          "$api": "./src/api",
+          "$controllers": "./src/controllers",
+          "$constants": "./src/constants",
+          "$helpers": "./src/helpers",
+          "$schemas": "./src/schemas",
+          "$middlewares": "./src/middlewares"
+        }
+      }],
+      "@babel/plugin-proposal-optional-chaining",
+      "@babel/plugin-proposal-nullish-coalescing-operator"
+    ],
+    "ignore": [
+      "node_modules"
+    ]
+  }
+  
