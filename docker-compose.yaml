@@ -100,16 +100,15 @@ services:
             "POSTGRES_PASSWORD=asd123"] 
 
   web:
-        build: ./docker/web 
-        container_name: django
-        command: bash -c "while !</dev/tcp/db/5432; do sleep 10; done; python manage.py runserver 0.0.0.0:8000 && python manage.py migrate"
-        volumes: [".:/code"]
+        build: ./backend_lab 
+        container_name: django 
+        command: bash -c "while !</dev/tcp/db/5432; do sleep 10; done; echo 'Conexion exitosa con db postgres'"
+        volumes: ["./backend_lab:/code/backend_lab", "./backend:/code/backend", "./manage.py:/code/manage.py"]
         ports: 
           - '8000:8000'
         restart: on-failure
         depends_on: 
-          - db
-          - mongo
+          - db 
 
   vue:
         container_name: front_lab
@@ -121,4 +120,3 @@ services:
 volumes:
   rs1:
   nodemodules:
-
