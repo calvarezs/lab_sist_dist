@@ -8,6 +8,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements_backend.txt
 RUN pip install djongo
 RUN pip install django-rest-framework
+RUN pip install django-cors-headers
 COPY . /code/
 CMD ["python3.9", "manage.py", "runserver", "0.0.0.0:8000"]
 CMD ["python3.9", "manage.py", "migrate", "--database=default"] 

@@ -22,9 +22,14 @@ const dbPath = 'mongodb://mongo:27017/kafka';
 mongoose.connect(dbPath);
  
 //Productor
-setInterval(function(){  produce(); }, 1000); //cada 1 seg
+//setInterval(function(){  produce(); }, 1200000); //cada 20 min
 // Consumidor
-setInterval(function(){  consume() }, 2000); //cada 2 seg
+//setInterval(function(){  consume() }, 1800000); //cada 30 min
+
+//Productor
+setInterval(function(){  produce(); }, 120000); //cada 2 min
+// Consumidor
+setInterval(function(){  consume() }, 180000); //cada 3 min
 
 app.get('/', (req, res) => res.send('Welcome to Express'));
 // Launch app to the specified port

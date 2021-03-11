@@ -1,14 +1,22 @@
-# lab_sist_dist
+# Laboratorio Sistemas Distribuidos
+## Universidad de Santiago de Chile
+### Carlos Álvarez, Williams Álvarez y Patricia Melo
 
-###PARA HACER FUNCIONAR EL PROYECTO NUEVO:
+---------------------
+
+## PARA HACER FUNCIONAR EL PROYECTO NUEVO:
 
 1) docker-compose up -d
-2) acceder cygwin
-3) /cygdrive/c/Users/Paty/Desktop/USACH/Sistemas distribuidos/lab_compañeros/lab-2-distribuidos-main
-4) ./congif.sh
+	(si no funciona por culpa de node modules, probar con yarn install en el cygwin)
+2) acceder cygwin: cd /cygdrive/c
+3) cd Users/(usuario)/Desktop/USACH/Sistemas distribuidos/lab_sist_dist
+4) ./config.sh
 5) boto y vuelvo a correr el docker lab_sist_dist_kafka_1
 6) Revisa en Robo 3T, base de datos se llama kafka, ingresa a Collections y doble click en Temperature
 7) docker-compose down --volumes
+
+* Para botar solo django:
+docker-compose up -d --no-deps --build web
 
 ---------------------
 

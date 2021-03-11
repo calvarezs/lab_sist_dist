@@ -102,7 +102,7 @@ services:
   web:
         build: ./backend_lab 
         container_name: django 
-        command: bash -c "while !</dev/tcp/db/5432; do sleep 10; done; echo 'Conexion exitosa con db postgres'"
+        command: bash -c "while !</dev/tcp/db/5432; do sleep 10; done; python manage.py runserver 0.0.0.0:8000"
         volumes: ["./backend_lab:/code/backend_lab", "./backend:/code/backend", "./manage.py:/code/manage.py"]
         ports: 
           - '8000:8000'
